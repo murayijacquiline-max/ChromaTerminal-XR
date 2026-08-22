@@ -41,19 +41,32 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// Spatial Neon Color Palette
-val NeonEmerald = Color(0xFF00FF9D)
-val ElectricCyan = Color(0xFF00E5FF)
-val DeepViolet = Color(0xFFB066FF)
-val WarningGold = Color(0xFFFFC700)
-val CriticalRed = Color(0xFFFF2A5F)
-val DimSteel = Color(0xFF4A5568)
-val DarkVoid = Color(0xFF0A0C14)
+// Color Theme Palettes
+enum class TerminalTheme(
+    val primary: Color,
+    val secondary: Color,
+    val accent: Color,
+    val bg: Color
+) {
+    CYAN(Color(0xFF00FF9D), Color(0xFF00E5FF), Color(0xFFB066FF), Color(0xFF0A0C14)),
+    AMBER(Color(0xFFFFB000), Color(0xFFFFD566), Color(0xFFFF7700), Color(0xFF140D04)),
+    MATRIX(Color(0xFF00FF66), Color(0xFF33FF88), Color(0xFF00AA44), Color(0xFF041008)),
+    VIOLET(Color(0xFFD477FF), Color(0xFF00E5FF), Color(0xFFFF44AA), Color(0xFF11081A))
+}
 
 @Composable
 fun SpatialTerminalWindow() {
     var commandText by remember { mutableStateOf("") }
     var showQuickBar by remember { mutableStateOf(true) }
+    var activeTheme by remember { mutableStateOf(TerminalTheme.CYAN) }
+    var currentDirectory by remember { mutableStateOf("/home/chroma") }
+
+    // Mock Virtual File System Structure
+    val virtualFiles = mapOf(
+        "/home/chroma/sys_status.log" to "[LOG: 2026-08-22] All spatial anchors calibrated. Latency: 1.1ms.",
+        "/home/chroma/xr_nodes.conf" to "node_0=0x1A_CENTER\nnode_1=0x1B_ORBITAL\nmode=HYBRID_SPATIAL",
+        "/home/chroma/readme.txt" to "Welcome to ChromaTerminal XR. Floating 3D Shell built with Jetpack Compose."
+    )
 
     var terminalOutput by remember {
         mutableStateOf(
@@ -64,10 +77,8 @@ fun SpatialTerminalWindow() {
                 "    | |___| | | |  _ <| |_| | |  | |/ ___ \\",
                 "     \\____|_| |_|_| \\_\\___/|_|  |_/_/   \\_\\",
                 " --------------------------------------------------",
-                "<SYS> Chroma Terminal spatial kernel loaded (v1.2.0-XR)",
-                "<NET> Spatial Node: 127.0.0.1:8080 // Anchor: LOCKED",
-                "<OK>  Neural gesture engine initialized",
-                "<SYS> Use GUI quick actions above or type 'help'.",
+                "<SYS> Chroma Terminal spatial kernel loaded (v1.3.0-XR)",
+                "<NET> Virtual Node Active // Type 'help' or 'theme amber'",
                 " --------------------------------------------------"
             )
         )
@@ -81,39 +92,66 @@ fun SpatialTerminalWindow() {
         if (trimmed.isEmpty()) return
 
         val newHistory = terminalOutput.toMutableList()
-        newHistory.add("chroma@xr:~$ $trimmed")
+        newHistory.add("chroma@xr:$currentDirectory$ $trimmed")
 
-        val parts = trimmed.split(" ")
+        val parts = trimmed.split("\\s+".toRegex())
         when (parts[0].lowercase()) {
             "help" -> {
-                newHistory.add("<SYS> Active Command Modules:")
-                newHistory.add("  <OK>  sysinfo  - Query spatial runtime diagnostics")
-                newHistory.add("  <NET> scan     - Probe local 3D spatial anchors")
-                newHistory.add("  <WAR> clear    - Flush buffer stream")
-                newHistory.add("  <SYS> echo     - Output text string to buffer")
+                newHistory.add("<SYS> Available Command Modules:")
+                newHistory.add("  <OK>  ls           - List files in virtual directory")
+                newHistory.add("  <OK>  cat <file>   - Read contents of a file")
+                newHistory.add("  <OK>  pwd          - Output current spatial working directory")
+                newHistory.add("  <NET> sysinfo      - Display XR system performance metrics")
+                newHistory.add("  <NET> theme <name> - Switch theme: cyan | amber | matrix | violet")
+                newHistory.add("  <WAR> clear        - Flush terminal screen output buffer")
+            }
+            "ls" -> {
+                newHistory.add("<OK> Directory contents of $currentDirectory:")
+                virtualFiles.keys.forEach { path ->
+                    val filename = path.substringAfterLast("/")
+                    newHistory.add("  -rw-r--r-- 1 chroma xr 1024 $filename")
+                }
+            }
+            "cat" -> {
+                if (parts.size < 2) {
+                    newHistory.add("<ERR> Usage: cat <filename>")
+                } else {
+                    val targetPath = "$currentDirectory/${parts[1]}"
+                    val content = virtualFiles[targetPath]
+                    if (content != null) {
+                        content.split("\n").forEach { line -> newHistory.add("  $line") }
+                    } else {
+                        newHistory.add("<ERR> File not found: ${parts[1]}")
+                    }
+                }
+            }
+            "pwd" -> {
+                newHistory.add("<OK> $currentDirectory")
+            }
+            "theme" -> {
+                if (parts.size < 2) {
+                    newHistory.add("<SYS> Current theme: ${activeTheme.name}. Options: cyan, amber, matrix, violet")
+                } else {
+                    when (parts[1].lowercase()) {
+                        "amber" -> { activeTheme = TerminalTheme.AMBER; newHistory.add("<OK> Theme changed to AMBER") }
+                        "matrix" -> { activeTheme = TerminalTheme.MATRIX; newHistory.add("<OK> Theme changed to MATRIX") }
+                        "cyan" -> { activeTheme = TerminalTheme.CYAN; newHistory.add("<OK> Theme changed to CYAN") }
+                        "violet" -> { activeTheme = TerminalTheme.VIOLET; newHistory.add("<OK> Theme changed to VIOLET") }
+                        else -> newHistory.add("<ERR> Unknown theme. Available: cyan, amber, matrix, violet")
+                    }
+                }
             }
             "sysinfo" -> {
                 newHistory.add("<SYS> [SPATIAL_DIAGNOSTICS]")
-                newHistory.add("  <OK> OS Target: Android XR Spatial Platform")
-                newHistory.add("  <OK> Surface Mode: Floating Window Panel")
-                newHistory.add("  <OK> Memory Heap: Nominal (34MB allocated)")
-                newHistory.add("  <NET> Anchor Latency: 1.2ms")
-            }
-            "scan" -> {
-                newHistory.add("<NET> Scanning spatial environment for anchors...")
-                newHistory.add("  <OK> [Anchor 0x1A] Center Window - LOCKED")
-                newHistory.add("  <OK> [Anchor 0x1B] Orbiting Controller - SYNCHRONIZED")
-                newHistory.add("<OK> Environment scan finished. 2 spatial anchors registered.")
+                newHistory.add("  <OK> Target: Android XR Spatial Platform")
+                newHistory.add("  <OK> Memory Heap: 38MB / Active Palette: ${activeTheme.name}")
+                newHistory.add("  <NET> FPS Target: 60 FPS // Latency: 1.1ms")
             }
             "clear" -> {
                 newHistory.clear()
             }
-            "echo" -> {
-                val message = parts.drop(1).joinToString(" ")
-                newHistory.add("  $message")
-            }
             else -> {
-                newHistory.add("<ERR> Module '${parts[0]}' unknown. Enter 'help' for directory.")
+                newHistory.add("<ERR> Unknown command '${parts[0]}'. Enter 'help' for directory.")
             }
         }
 
@@ -128,29 +166,21 @@ fun SpatialTerminalWindow() {
     }
 
     Surface(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(6.dp),
-        color = DarkVoid,
+        modifier = Modifier.fillMaxSize().padding(6.dp),
+        color = activeTheme.bg,
         shape = RoundedCornerShape(12.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(14.dp)
-        ) {
-            // Dashboard Header & Visual Metrics Progress Bar
+        Column(modifier = Modifier.fillMaxSize().padding(14.dp)) {
+            // Dashboard Header
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 6.dp),
+                modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
                     Text(
                         text = "CHROMA//XR · KERNEL_SHELL",
-                        color = ElectricCyan,
+                        color = activeTheme.secondary,
                         fontFamily = FontFamily.Monospace,
                         fontSize = 12.sp
                     )
@@ -160,17 +190,15 @@ fun SpatialTerminalWindow() {
                     ) {
                         Text(
                             text = "HEAP LOAD ",
-                            color = DimSteel,
+                            color = Color.Gray,
                             fontFamily = FontFamily.Monospace,
                             fontSize = 10.sp
                         )
                         LinearProgressIndicator(
-                            progress = { 0.35f },
-                            modifier = Modifier
-                                .width(80.dp)
-                                .height(4.dp),
-                            color = NeonEmerald,
-                            trackColor = DimSteel.copy(alpha = 0.3f)
+                            progress = { 0.28f },
+                            modifier = Modifier.width(80.dp).height(4.dp),
+                            color = activeTheme.primary,
+                            trackColor = Color.Gray.copy(alpha = 0.3f)
                         )
                     }
                 }
@@ -178,7 +206,7 @@ fun SpatialTerminalWindow() {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = "[ ❖ ANCHOR: ACTIVE ]",
-                        color = NeonEmerald,
+                        color = activeTheme.primary,
                         fontFamily = FontFamily.Monospace,
                         fontSize = 11.sp
                     )
@@ -189,7 +217,7 @@ fun SpatialTerminalWindow() {
                     ) {
                         Text(
                             text = if (showQuickBar) "[ GUI: ON ]" else "[ GUI: OFF ]",
-                            color = DeepViolet,
+                            color = activeTheme.accent,
                             fontFamily = FontFamily.Monospace,
                             fontSize = 11.sp
                         )
@@ -197,50 +225,49 @@ fun SpatialTerminalWindow() {
                 }
             }
 
-            HorizontalDivider(color = DeepViolet.copy(alpha = 0.4f), thickness = 1.dp)
+            HorizontalDivider(color = activeTheme.accent.copy(alpha = 0.4f), thickness = 1.dp)
 
-            // Visual Quick-Action Buttons (Clickable GUI Chips)
+            // Visual Quick Action Toolbar
             AnimatedVisibility(visible = showQuickBar) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 6.dp),
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     AssistChip(
-                        onClick = { executeCommand("scan") },
-                        label = { Text("🔍 Spatial Scan", color = ElectricCyan, fontSize = 11.sp) },
-                        border = AssistChipDefaults.assistChipBorder(enabled = true, borderColor = ElectricCyan.copy(alpha = 0.5f))
+                        onClick = { executeCommand("ls") },
+                        label = { Text("📁 Files (ls)", color = activeTheme.secondary, fontSize = 11.sp) }
                     )
                     AssistChip(
                         onClick = { executeCommand("sysinfo") },
-                        label = { Text("📊 Diagnostics", color = NeonEmerald, fontSize = 11.sp) },
-                        border = AssistChipDefaults.assistChipBorder(enabled = true, borderColor = NeonEmerald.copy(alpha = 0.5f))
+                        label = { Text("📊 Diagnostics", color = activeTheme.primary, fontSize = 11.sp) }
                     )
                     AssistChip(
-                        onClick = { executeCommand("help") },
-                        label = { Text("❓ Help", color = DeepViolet, fontSize = 11.sp) },
-                        border = AssistChipDefaults.assistChipBorder(enabled = true, borderColor = DeepViolet.copy(alpha = 0.5f))
+                        onClick = {
+                            val nextTheme = when(activeTheme) {
+                                TerminalTheme.CYAN -> "amber"
+                                TerminalTheme.AMBER -> "matrix"
+                                TerminalTheme.MATRIX -> "violet"
+                                TerminalTheme.VIOLET -> "cyan"
+                            }
+                            executeCommand("theme $nextTheme")
+                        },
+                        label = { Text("🎨 Palette (${activeTheme.name})", color = activeTheme.accent, fontSize = 11.sp) }
                     )
                     AssistChip(
                         onClick = { executeCommand("clear") },
-                        label = { Text("🧹 Clear", color = WarningGold, fontSize = 11.sp) },
-                        border = AssistChipDefaults.assistChipBorder(enabled = true, borderColor = WarningGold.copy(alpha = 0.5f))
+                        label = { Text("🧹 Clear", color = Color(0xFFFFC700), fontSize = 11.sp) }
                     )
                 }
             }
 
-            // Main Terminal Output
+            // Terminal Screen Output
             LazyColumn(
                 state = listState,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp)
+                modifier = Modifier.weight(1f).fillMaxWidth().padding(vertical = 4.dp)
             ) {
                 items(terminalOutput) { line ->
                     Text(
-                        text = formatChromaLine(line),
+                        text = formatLine(line, activeTheme),
                         fontFamily = FontFamily.Monospace,
                         fontSize = 13.sp,
                         modifier = Modifier.padding(vertical = 1.dp)
@@ -248,18 +275,16 @@ fun SpatialTerminalWindow() {
                 }
             }
 
-            HorizontalDivider(color = DeepViolet.copy(alpha = 0.3f), thickness = 1.dp)
+            HorizontalDivider(color = activeTheme.accent.copy(alpha = 0.3f), thickness = 1.dp)
 
-            // Command Prompt Bar
+            // Command Prompt
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 6.dp),
+                modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "chroma@xr:~$ ",
-                    color = DeepViolet,
+                    text = "chroma@xr:$currentDirectory$ ",
+                    color = activeTheme.accent,
                     fontFamily = FontFamily.Monospace,
                     fontSize = 13.sp
                 )
@@ -271,10 +296,10 @@ fun SpatialTerminalWindow() {
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                     keyboardActions = KeyboardActions(onSend = { executeCommand(commandText) }),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = ElectricCyan,
-                        unfocusedBorderColor = DimSteel,
-                        focusedTextColor = NeonEmerald,
-                        unfocusedTextColor = NeonEmerald
+                        focusedBorderColor = activeTheme.secondary,
+                        unfocusedBorderColor = Color.DarkGray,
+                        focusedTextColor = activeTheme.primary,
+                        unfocusedTextColor = activeTheme.primary
                     )
                 )
             }
@@ -282,36 +307,27 @@ fun SpatialTerminalWindow() {
     }
 }
 
-// Token Highlighting System
-fun formatChromaLine(line: String): AnnotatedString {
+fun formatLine(line: String, theme: TerminalTheme): AnnotatedString {
     return buildAnnotatedString {
         when {
             line.startsWith("<OK>") -> {
-                withStyle(SpanStyle(color = NeonEmerald)) { append("<OK> ") }
+                withStyle(SpanStyle(color = theme.primary)) { append("<OK> ") }
                 withStyle(SpanStyle(color = Color.White)) { append(line.removePrefix("<OK>")) }
             }
             line.startsWith("<SYS>") -> {
-                withStyle(SpanStyle(color = ElectricCyan)) { append("<SYS> ") }
+                withStyle(SpanStyle(color = theme.secondary)) { append("<SYS> ") }
                 withStyle(SpanStyle(color = Color.LightGray)) { append(line.removePrefix("<SYS>")) }
             }
             line.startsWith("<NET>") -> {
-                withStyle(SpanStyle(color = DeepViolet)) { append("<NET> ") }
+                withStyle(SpanStyle(color = theme.accent)) { append("<NET> ") }
                 withStyle(SpanStyle(color = Color.White)) { append(line.removePrefix("<NET>")) }
             }
-            line.startsWith("<WAR>") -> {
-                withStyle(SpanStyle(color = WarningGold)) { append("<WAR> ") }
-                withStyle(SpanStyle(color = WarningGold)) { append(line.removePrefix("<WAR>")) }
-            }
             line.startsWith("<ERR>") -> {
-                withStyle(SpanStyle(color = CriticalRed)) { append("<ERR> ") }
-                withStyle(SpanStyle(color = CriticalRed)) { append(line.removePrefix("<ERR>")) }
-            }
-            line.startsWith("chroma@xr:~$") -> {
-                withStyle(SpanStyle(color = DeepViolet)) { append("chroma@xr:~$") }
-                withStyle(SpanStyle(color = ElectricCyan)) { append(line.removePrefix("chroma@xr:~$")) }
+                withStyle(SpanStyle(color = Color(0xFFFF2A5F))) { append("<ERR> ") }
+                withStyle(SpanStyle(color = Color(0xFFFF2A5F))) { append(line.removePrefix("<ERR>")) }
             }
             else -> {
-                withStyle(SpanStyle(color = NeonEmerald)) { append(line) }
+                withStyle(SpanStyle(color = theme.primary)) { append(line) }
             }
         }
     }
