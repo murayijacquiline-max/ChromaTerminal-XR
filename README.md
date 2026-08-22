@@ -1,21 +1,36 @@
-Project Title
-ChromaTerminal XR: Multimodal Visual ADB & Spatial Proofing HUD
+# ChromaTerminal XR 🚀
 
-Use Case & User Experience
-ChromaTerminal XR is a hands-free spatial utility designed for Android XR display glasses and smart eyewear. It solves a major point of friction for system administrators, mobile repair technicians, and media designers: managing hardware, terminal diagnostics, and physical color proofing while keeping both hands completely free.  
-Android Developers
+A floating, retro-futuristic spatial terminal and interactive shell built for **Android XR**. **ChromaTerminal XR** bridges command-line productivity with spatial computing UI components, offering dynamic color palettes, a virtual file system, and hybrid GUI control chips.
 
-1. Vision-Guided ADB & Spatial System Control
+---
 
-The Scenario: A technician or developer is working on local servers, headless Linux rigs, or an Android device with a damaged/black display.
+## 📸 Key Features
 
-The XR Experience: By looking at the target hardware through the smart glasses, Gemini Vision identifies the device and projects a glanceable, floating terminal HUD anchored over the physical chassis. Using low-latency Gemini Live voice interaction, the user speaks intent-driven commands (e.g., "Pull logcat errors for memory leaks over local Wi-Fi" or "Execute ADB device recovery script"). The app translates these requests into validated local system commands in real time without requiring a laptop keyboard or smartphone screen.
+* **Spatial Windowing**: Engineered for Android XR Home Space floating panel runtime (`XR_ACTIVITY_START_MODE_HOME_SPACE`).
+* **Hybrid Interface**: Seamlessly switch between manual keyboard terminal input and direct 3D visual action chips (`AssistChip`).
+* **Dynamic Palette Engine**: Instant runtime theme switching (`CYAN`, `AMBER`, `MATRIX`, `VIOLET`).
+* **Virtual Shell Commands**: Interactive shell parsing with simulated system diagnostics and file system navigation.
+* **Cyberpunk Aesthetics**: Custom ASCII banners, real-time heap load progress bars, and tokenized syntax highlighting (`<SYS>`, `<NET>`, `<OK>`, `<ERR>`).
 
-2. Real-Time Optical Print Calibration & AR Heat Maps
+---
 
-The Scenario: A photographer or print technician needs to verify color accuracy and ink density on physical media under ambient light.
+## 🛠️ Command Reference
 
-The XR Experience: Looking at a fresh physical print alongside the digital source file triggers an immediate optical pass by Gemini Vision. ChromaTerminal XR projects an augmented reality heat map directly onto the printed paper, visually highlighting shadow clipping, crushed blacks, and ink-bleed zones. The HUD immediately displays actionable driver adjustment sliders (e.g., density adjustments for printer ink) into the user's field of view, removing trial-and-error reprinting.
+| Command | Arguments | Description |
+| :--- | :--- | :--- |
+| `help` | None | Displays active terminal commands and usage options |
+| `ls` | None | Lists virtual files in the current spatial directory |
+| `cat` | `<filename>` | Outputs contents of specified file |
+| `pwd` | None | Displays current spatial working directory |
+| `sysinfo` | None | Prints Android XR platform metrics, heap memory, and anchor status |
+| `theme` | `cyan` \| `amber` \| `matrix` \| `violet` | Switches interface color theme in real-time |
+| `clear` | None | Flushes output buffer |
 
-Value to the Android XR Ecosystem
-This experience demonstrates the unique strength of Android XR display glasses: context-aware, low-latency utility in technical scenarios where traditional computing form factors create physical friction. Built using the Jetpack XR SDK and native Jetpack Compose components, ChromaTerminal XR highlights how Gemini's multimodal capabilities turn wearable optical sensors into a real-time system diagnostic tool.
+---
+
+## 🏗️ Architecture Stack
+
+* **Language**: Kotlin 2.0+
+* **UI Toolkit**: Jetpack Compose (Material 3)
+* **Spatial Target**: Android XR Runtime (API 34+)
+* **State Management**: Reactive Compose State (`remember`, `mutableStateOf`)
