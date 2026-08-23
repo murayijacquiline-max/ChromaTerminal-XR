@@ -2,6 +2,7 @@
 
 A floating, retro-futuristic spatial terminal and interactive shell built for **Android XR**. **ChromaTerminal XR** bridges command-line productivity with spatial computing UI components, offering dynamic color palettes, a virtual file system, and hybrid GUI control chips.
 [📄 View Presentation Slides (PDF)](./Building%20Android%20XR%20Apps.pdf)
+<img width="721" height="441" alt="Screenshot 2026-08-23 194121" src="https://github.com/user-attachments/assets/099e0699-d4c1-4fd2-961f-989158320612" />
 
 ---
 
