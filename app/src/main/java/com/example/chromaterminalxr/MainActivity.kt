@@ -61,6 +61,10 @@ fun SpatialTerminalWindow() {
     var activeTheme by remember { mutableStateOf(TerminalTheme.CYAN) }
     var currentDirectory by remember { mutableStateOf("/home/chroma") }
 
+    // --- A.E.G.I.S. AI Core & Coroutine Scope ---
+    val aiManager = remember { TerminalAIManager() }
+    val coroutineScope = rememberCoroutineScope()
+
     // Mock Virtual File System Structure
     val virtualFiles = mapOf(
         "/home/chroma/sys_status.log" to "[LOG: 2026-08-22] All spatial anchors calibrated. Latency: 1.1ms.",
@@ -78,14 +82,13 @@ fun SpatialTerminalWindow() {
                 "     \\____|_| |_|_| \\_\\___/|_|  |_/_/   \\_\\",
                 " --------------------------------------------------",
                 "<SYS> Chroma Terminal spatial kernel loaded (v1.3.0-XR)",
-                "<NET> Virtual Node Active // Type 'help' or 'theme amber'",
+                "<NET> A.E.G.I.S. AI Core Online // Type 'help' or chat naturally",
                 " --------------------------------------------------"
             )
         )
     }
 
     val listState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
 
     fun executeCommand(input: String) {
         val trimmed = input.trim()
@@ -104,6 +107,10 @@ fun SpatialTerminalWindow() {
                 newHistory.add("  <NET> sysinfo      - Display XR system performance metrics")
                 newHistory.add("  <NET> theme <name> - Switch theme: cyan | amber | matrix | violet")
                 newHistory.add("  <WAR> clear        - Flush terminal screen output buffer")
+                newHistory.add("  <SYS> (Any other text is automatically processed by A.E.G.I.S. AI)")
+
+                terminalOutput = newHistory
+                commandText = ""
             }
             "ls" -> {
                 newHistory.add("<OK> Directory contents of $currentDirectory:")
@@ -111,6 +118,8 @@ fun SpatialTerminalWindow() {
                     val filename = path.substringAfterLast("/")
                     newHistory.add("  -rw-r--r-- 1 chroma xr 1024 $filename")
                 }
+                terminalOutput = newHistory
+                commandText = ""
             }
             "cat" -> {
                 if (parts.size < 2) {
@@ -124,9 +133,13 @@ fun SpatialTerminalWindow() {
                         newHistory.add("<ERR> File not found: ${parts[1]}")
                     }
                 }
+                terminalOutput = newHistory
+                commandText = ""
             }
             "pwd" -> {
                 newHistory.add("<OK> $currentDirectory")
+                terminalOutput = newHistory
+                commandText = ""
             }
             "theme" -> {
                 if (parts.size < 2) {
@@ -140,23 +153,54 @@ fun SpatialTerminalWindow() {
                         else -> newHistory.add("<ERR> Unknown theme. Available: cyan, amber, matrix, violet")
                     }
                 }
+                terminalOutput = newHistory
+                commandText = ""
             }
             "sysinfo" -> {
                 newHistory.add("<SYS> [SPATIAL_DIAGNOSTICS]")
                 newHistory.add("  <OK> Target: Android XR Spatial Platform")
                 newHistory.add("  <OK> Memory Heap: 38MB / Active Palette: ${activeTheme.name}")
                 newHistory.add("  <NET> FPS Target: 60 FPS // Latency: 1.1ms")
+                terminalOutput = newHistory
+                commandText = ""
             }
             "clear" -> {
                 newHistory.clear()
+                terminalOutput = newHistory
+                commandText = ""
             }
             else -> {
-                newHistory.add("<ERR> Unknown command '${parts[0]}'. Enter 'help' for directory.")
+                // Route unknown commands directly to A.E.G.I.S. AI Core!
+                newHistory.add("<SYS> A.E.G.I.S. processing query...")
+                terminalOutput = newHistory
+                commandText = ""
+
+                coroutineScope.launch {
+                    val aiResponse = aiManager.processPrompt(trimmed)
+                    val updatedHistory = terminalOutput.toMutableList()
+
+                    when {
+                        aiResponse.startsWith("CMD:") -> {
+                            updatedHistory.add("<OK> [A.E.G.I.S. CMD] ${aiResponse.removePrefix("CMD:")}")
+                        }
+                        aiResponse.startsWith("SPATIAL_UI:") -> {
+                            updatedHistory.add("<NET> [A.E.G.I.S. UI] ${aiResponse.removePrefix("SPATIAL_UI:")}")
+                        }
+                        aiResponse.startsWith("CODE:") -> {
+                            updatedHistory.add("<SYS> [A.E.G.I.S. CODE]")
+                            aiResponse.removePrefix("CODE:").split("\n").forEach { line ->
+                                updatedHistory.add("  $line")
+                            }
+                        }
+                        else -> {
+                            val cleanMsg = aiResponse.removePrefix("MSG:")
+                            updatedHistory.add("<SYS> [A.E.G.I.S.] $cleanMsg")
+                        }
+                    }
+                    terminalOutput = updatedHistory
+                }
             }
         }
-
-        terminalOutput = newHistory
-        commandText = ""
 
         coroutineScope.launch {
             if (terminalOutput.isNotEmpty()) {
