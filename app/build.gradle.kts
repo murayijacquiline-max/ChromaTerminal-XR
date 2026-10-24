@@ -44,6 +44,12 @@ android {
 }
 
 dependencies {
+    // Other existing dependencies...
+
+    // Android XR Compose & Runtime dependencies supporting 3D models
+    implementation("androidx.xr.compose:compose:1.0.0-beta02")
+    implementation("androidx.xr.scenecore:scenecore:1.0.0")
+    implementation("androidx.xr.runtime:runtime:1.0.0")
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
