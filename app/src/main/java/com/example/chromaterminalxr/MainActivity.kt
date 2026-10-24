@@ -26,16 +26,41 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+// --- XR Subspace & GLTF Imports ---
+import androidx.xr.compose.spatial.Subspace
+import androidx.xr.compose.subspace.SpatialPanel
+import androidx.xr.compose.subspace.SpatialGltfModel
+import androidx.xr.compose.subspace.SpatialGltfModelSource
+import androidx.xr.compose.subspace.rememberSpatialGltfModelState
+import androidx.xr.compose.subspace.ExperimentalSpatialGltfModelApi
+import androidx.xr.compose.subspace.layout.SubspaceModifier
 import com.example.chromaterminalxr.ui.theme.ChromaTerminalXRTheme
 import kotlinx.coroutines.launch
+import java.nio.file.Paths
 
+@OptIn(ExperimentalSpatialGltfModelApi::class)
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             ChromaTerminalXRTheme {
-                SpatialTerminalWindow()
+                // XR Subspace container houses both your 2D terminal and 3D companion
+                Subspace {
+                    SpatialPanel {
+                        SpatialTerminalWindow()
+                    }
+
+                    // Renders your animated 3D anime companion model in spatial view
+                    val modelState = rememberSpatialGltfModelState(
+                        source = SpatialGltfModelSource.fromPath(Paths.get("models/anime_companion.glb"))
+                    )
+
+                    SpatialGltfModel(
+                        state = modelState,
+                        modifier = SubspaceModifier
+                    )
+                }
             }
         }
     }
@@ -62,7 +87,7 @@ fun SpatialTerminalWindow() {
     var currentDirectory by remember { mutableStateOf("/home/chroma") }
 
     // --- A.E.G.I.S. AI Core & Coroutine Scope ---
-    val aiManager = remember { TerminalAIManager() }
+    val aiManager = remember { TerminalAIManager("YOUR_API_KEY_HERE") }
     val coroutineScope = rememberCoroutineScope()
 
     // Mock Virtual File System Structure
@@ -170,13 +195,12 @@ fun SpatialTerminalWindow() {
                 commandText = ""
             }
             else -> {
-                // Route unknown commands directly to A.E.G.I.S. AI Core!
                 newHistory.add("<SYS> A.E.G.I.S. processing query...")
                 terminalOutput = newHistory
                 commandText = ""
 
                 coroutineScope.launch {
-                    val aiResponse = aiManager.processPrompt(trimmed)
+                    val aiResponse = aiManager.processTerminalCommand(trimmed)
                     val updatedHistory = terminalOutput.toMutableList()
 
                     when {
@@ -215,7 +239,6 @@ fun SpatialTerminalWindow() {
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.fillMaxSize().padding(14.dp)) {
-            // Dashboard Header
             Row(
                 modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -271,7 +294,6 @@ fun SpatialTerminalWindow() {
 
             HorizontalDivider(color = activeTheme.accent.copy(alpha = 0.4f), thickness = 1.dp)
 
-            // Visual Quick Action Toolbar
             AnimatedVisibility(visible = showQuickBar) {
                 Row(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
@@ -304,7 +326,6 @@ fun SpatialTerminalWindow() {
                 }
             }
 
-            // Terminal Screen Output
             LazyColumn(
                 state = listState,
                 modifier = Modifier.weight(1f).fillMaxWidth().padding(vertical = 4.dp)
@@ -319,9 +340,8 @@ fun SpatialTerminalWindow() {
                 }
             }
 
-            HorizontalDivider(color = activeTheme.accent.copy(alpha = 0.3f), thickness = 1.dp)
+            HorizontalDivider(color = Color(0xFF00FF66).copy(alpha = 0.4f))
 
-            // Command Prompt
             Row(
                 modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
                 verticalAlignment = Alignment.CenterVertically

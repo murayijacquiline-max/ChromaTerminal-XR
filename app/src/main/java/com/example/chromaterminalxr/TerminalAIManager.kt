@@ -8,9 +8,9 @@ import com.google.ai.client.generativeai.type.generationConfig
  * A.E.G.I.S. - Augmented Environment & Graphics Intelligence System
  * Multi-Domain Spatial Intelligence Engine for ChromaTerminal XR
  */
-class TerminalAIManager {
+class TerminalAIManager(apiKeyOverride: String? = null) {
 
-    private val apiKey = BuildConfig.GEMINI_API_KEY
+    private val apiKey = apiKeyOverride?.takeIf { ((it != "YOUR_API_KEY_HERE") && (it.isNotBlank())) } ?: BuildConfig.GEMINI_API_KEY
 
     private val config = generationConfig {
         temperature = 0.5f
@@ -41,7 +41,7 @@ class TerminalAIManager {
                         "3. SPATIAL_UI:<spec_or_layout>\n" +
                         "   Use when creating, spawning, positioning, or reconfiguring 3D spatial panels, medical HUDs, tactical telemetry windows, or media displays in the user's room space.\n\n" +
                         "4. CODE:<snippet>\n" +
-                        "   Use when providing code blocks, scripts, or technical tutorials."
+                        "   Use when providing code blocks, scripts, or technical tutorials,"
             )
         }
     )
@@ -53,5 +53,9 @@ class TerminalAIManager {
         } catch (e: Exception) {
             "MSG:A.E.G.I.S. Exception: ${e.localizedMessage}"
         }
+    }
+
+    suspend fun processTerminalCommand(userInput: String): String {
+        return processPrompt(userInput)
     }
 }

@@ -7,9 +7,8 @@ plugins {
 
 android {
     namespace = "com.example.chromaterminalxr"
-    compileSdk {
-        version = release(37)
-    }
+
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.example.chromaterminalxr"
@@ -31,9 +30,7 @@ android {
 
     buildTypes {
         release {
-            optimization {
-                enable = false
-            }
+            isMinifyEnabled = false
         }
     }
     compileOptions {
@@ -49,7 +46,6 @@ android {
 dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.compose)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.compose.ui)
@@ -59,9 +55,13 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
-    implementation(libs.androidx.runtime)
+
+    // XR Libraries
+    implementation(libs.androidx.compose)
     implementation(libs.androidx.scenecore)
+    implementation(libs.androidx.runtime)
     implementation(libs.extensions1.xr)
+
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
@@ -71,5 +71,5 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     // Gemini SDK
-    implementation("com.google.ai.client.generativeai:generativeai:0.9.0")
+    implementation(libs.generativeai)
 }
