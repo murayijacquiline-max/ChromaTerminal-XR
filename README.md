@@ -4,7 +4,7 @@ A next-generation spatial workspace, developer shell, and interactive 3D hologra
 
 <img width="721" height="441" alt="ChromaTerminal XR Spatial Interface" src="https://github.com/user-attachments/assets/49fc3985-23d9-4ee0-9cbe-44344fd65484"/>
 
-[📄 View Architecture & Pitch Deck (PDF)](./Building%20Android%20XR%20Apps.pdf)
+[📊 View Architecture & Pitch Deck (PPTX)](./ChromaTerminal_XR_AEGIS_Pitch_Deck%20final%20product.pptx)
 
 ---
 
